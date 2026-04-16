@@ -1,0 +1,4 @@
+github.com/atharvyadav96k/gcp v1.1.2 h1:+C4nNrU5lPTfmtf6qrdQqc9WMeu2U5nNtlrZYJiB8Wg=
+github.com/atharvyadav96k/gcp v1.1.2/go.mod h1:pWB3aIfGOYwBu5oIk4ddwg3Wn6++umF3pNK+it5yzzo=
+golang.org/x/crypto v0.50.0 h1:zO47/JPrL6vsNkINmLoo/PH1gcxpls50DNogFvB5ZGI=
+golang.org/x/crypto v0.50.0/go.mod h1:3muZ7vA7PBCE6xgPX7nkzzjiUq87kRItoJQM1Yo8S+Q=
