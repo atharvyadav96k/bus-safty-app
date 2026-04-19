@@ -18,3 +18,7 @@ type Org struct {
 	CreatedAt    time.Time    `json:"created_at" firestore:"create_at"`
 	UpdatedAt    time.Time    `json:"updated_at" firestore:"update_at"`
 }
+
+func (o *Org) SetID(id string) {
+	o.ID = id
+}

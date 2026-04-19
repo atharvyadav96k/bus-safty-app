@@ -20,3 +20,7 @@ type User struct {
 	CreatedAt          time.Time       `json:"created_at" firestore:"created_at"`
 	UpdatedAt          time.Time       `json:"updated_at" firestore:"update_at"`
 }
+
+func (u *User) SetID(id string) {
+	u.ID = id
+}
