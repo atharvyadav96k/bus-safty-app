@@ -58,6 +58,54 @@ func GetUniqueFields(data interface{}) []firestore.PropertyFilter {
 	return filters
 }
 
+func (a *App) CheckForDuplicate(ctx context.Context, collection string, data interface{}) error {
+	filters := GetUniqueFields(data)
+	if len(filters) == 0 {
+		return nil
+	}
+
+	entityFilters := make([]firestore.EntityFilter, len(filters))
+	for i, f := range filters {
+		entityFilters[i] = f
+	}
+
+	query := a.StoreDoc(collection).WhereEntity(
+		firestore.OrFilter{
+			Filters: entityFilters,
+		},
+	)
+
+	docs, err := query.Documents(ctx).GetAll()
+	if err != nil {
+		return fmt.Errorf("failed to check uniqueness: %w", err)
+	}
+
+	if len(docs) == 0 {
+		return nil
+	}
+
+	duplicates := make(map[string]interface{})
+	for _, doc := range docs {
+		dataMap := doc.Data()
+
+		for _, f := range filters {
+			if val, ok := dataMap[f.Path]; ok && val == f.Value {
+				duplicates[f.Path] = f.Value
+			}
+		}
+	}
+
+	if len(duplicates) > 0 {
+		var parts []string
+		for field, value := range duplicates {
+			parts = append(parts, fmt.Sprintf("%s=%v", field, value))
+		}
+		return fmt.Errorf("duplicate fields: %s", strings.Join(parts, ", "))
+	}
+
+	return nil
+}
+
 // StoreCreate inserts a new document into the given collection with an auto-generated ID.
 //
 // Parameters:
@@ -72,24 +120,8 @@ func GetUniqueFields(data interface{}) []firestore.PropertyFilter {
 //
 //	err := app.StoreCreate(ctx, "users", userData)
 func (a *App) StoreCreate(ctx context.Context, collection string, data interface{}) error {
-	filters := GetUniqueFields(data)
-	if len(filters) > 0 {
-		entityFilters := make([]firestore.EntityFilter, 0, len(filters))
-		for _, f := range filters {
-			entityFilters = append(entityFilters, f)
-		}
-		query := a.StoreDoc(collection).WhereEntity(
-			firestore.OrFilter{
-				Filters: entityFilters,
-			},
-		)
-		docs, err := query.Documents(ctx).GetAll()
-		if err != nil {
-			return fmt.Errorf("failed to check uniqueness: %w", err)
-		}
-		if len(docs) > 0 {
-			return fmt.Errorf("duplicate value found in one of the unique fields")
-		}
+	if err := a.CheckForDuplicate(ctx, collection, data); err != nil {
+		return err
 	}
 	_, _, err := a.StoreDoc(collection).Add(ctx, data)
 	return err
@@ -111,6 +143,9 @@ func (a *App) StoreCreate(ctx context.Context, collection string, data interface
 //
 //	err := app.StoreCreateWithId(ctx, "users", "user123", userData)
 func (a *App) StoreCreateWithId(ctx context.Context, collection string, id string, data interface{}) error {
+	if err := a.CheckForDuplicate(ctx, collection, data); err != nil {
+		return err
+	}
 	docRef := a.StoreDoc(collection).Doc(id)
 	_, err := docRef.Create(ctx, data)
 	return err
