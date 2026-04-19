@@ -9,7 +9,8 @@ import (
 	"cloud.google.com/go/firestore"
 )
 
-// 1. Change return type to []firestore.BooleanExpression
+// return the query for the unique constrain
+// for the struct record contains unique="true"
 func GetUniqueFields(data interface{}) []firestore.PropertyFilter {
 	val := reflect.ValueOf(data)
 	if val.Kind() == reflect.Ptr {
@@ -58,6 +59,15 @@ func GetUniqueFields(data interface{}) []firestore.PropertyFilter {
 	return filters
 }
 
+// Make sure consistency in the database for the unique values should not be added duplicate in the
+// database
+// example:
+//
+//	type user struct{
+//		email string `unique="true"`
+//	}
+//
+// record with unique constrain are not stored again
 func (a *App) CheckForDuplicate(ctx context.Context, collection string, data interface{}) error {
 	filters := GetUniqueFields(data)
 	if len(filters) == 0 {
@@ -123,7 +133,15 @@ func (a *App) StoreCreate(ctx context.Context, collection string, data interface
 	if err := a.CheckForDuplicate(ctx, collection, data); err != nil {
 		return err
 	}
-	_, _, err := a.StoreDoc(collection).Add(ctx, data)
+
+	docRef := a.StoreDoc(collection).NewDoc()
+
+	entity, ok := data.(StoreEntity)
+	if !ok {
+		return fmt.Errorf("data must implement Identifiable")
+	}
+	entity.SetID(docRef.ID)
+	_, err := docRef.Create(ctx, data)
 	return err
 }
 
@@ -146,6 +164,11 @@ func (a *App) StoreCreateWithId(ctx context.Context, collection string, id strin
 	if err := a.CheckForDuplicate(ctx, collection, data); err != nil {
 		return err
 	}
+	entity, ok := data.(StoreEntity)
+	if !ok {
+		return fmt.Errorf("data must implement Identifiable")
+	}
+	entity.SetID(id)
 	docRef := a.StoreDoc(collection).Doc(id)
 	_, err := docRef.Create(ctx, data)
 	return err

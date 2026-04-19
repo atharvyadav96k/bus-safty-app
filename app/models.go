@@ -31,3 +31,7 @@ type UniqueField struct {
 	Name  string
 	Value interface{}
 }
+
+type StoreEntity interface {
+	SetID(string)
+}
