@@ -2,7 +2,61 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"reflect"
+	"strings"
+
+	"cloud.google.com/go/firestore"
 )
+
+// 1. Change return type to []firestore.BooleanExpression
+func GetUniqueFields(data interface{}) []firestore.PropertyFilter {
+	val := reflect.ValueOf(data)
+	if val.Kind() == reflect.Ptr {
+		if val.IsNil() {
+			return nil
+		}
+		val = val.Elem()
+	}
+
+	if val.Kind() != reflect.Struct {
+		return nil
+	}
+
+	typ := val.Type()
+	filters := make([]firestore.PropertyFilter, 0, val.NumField())
+
+	for i := 0; i < val.NumField(); i++ {
+		field := typ.Field(i)
+
+		if field.Tag.Get("unique") != "true" {
+			continue
+		}
+
+		fieldName := field.Tag.Get("firestore")
+
+		switch {
+		case fieldName == "" || fieldName == "-":
+			fieldName = field.Name
+		case strings.Contains(fieldName, ","):
+			fieldName = strings.Split(fieldName, ",")[0]
+		}
+
+		value := val.Field(i)
+
+		if value.IsZero() {
+			continue
+		}
+
+		filters = append(filters, firestore.PropertyFilter{
+			Path:     fieldName,
+			Operator: "==",
+			Value:    value.Interface(),
+		})
+	}
+
+	return filters
+}
 
 // StoreCreate inserts a new document into the given collection with an auto-generated ID.
 //
@@ -18,6 +72,25 @@ import (
 //
 //	err := app.StoreCreate(ctx, "users", userData)
 func (a *App) StoreCreate(ctx context.Context, collection string, data interface{}) error {
+	filters := GetUniqueFields(data)
+	if len(filters) > 0 {
+		entityFilters := make([]firestore.EntityFilter, 0, len(filters))
+		for _, f := range filters {
+			entityFilters = append(entityFilters, f)
+		}
+		query := a.StoreDoc(collection).WhereEntity(
+			firestore.OrFilter{
+				Filters: entityFilters,
+			},
+		)
+		docs, err := query.Documents(ctx).GetAll()
+		if err != nil {
+			return fmt.Errorf("failed to check uniqueness: %w", err)
+		}
+		if len(docs) > 0 {
+			return fmt.Errorf("duplicate value found in one of the unique fields")
+		}
+	}
 	_, _, err := a.StoreDoc(collection).Add(ctx, data)
 	return err
 }

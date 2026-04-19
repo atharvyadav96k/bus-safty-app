@@ -26,3 +26,8 @@ type App struct {
 	// It is used for publishing and subscribing to messages.
 	PubSub *pubsub.Service
 }
+
+type UniqueField struct {
+	Name  string
+	Value interface{}
+}
