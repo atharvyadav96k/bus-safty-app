@@ -3,22 +3,40 @@ package database_models
 import (
 	"time"
 
-	"github.com/atharvyadav96k/gcp/common/entity"
+	"gorm.io/gorm"
+)
+
+const (
+	TableOrgs = "orgs"
+
+	OrgColID           = "id"
+	OrgColName         = "name"
+	OrgColCode         = "code"
+	OrgColContactEmail = "contact_email"
+	OrgColLogoURL      = "logo_url"
+	OrgColRootUserID   = "root_user_id"
+	OrgColCreatedAt    = "created_at"
+	OrgColUpdatedAt    = "updated_at"
+	OrgColDeletedAt    = "deleted_at"
 )
 
 type Org struct {
-	ID           string       `json:"id" firestore:"id"`
-	Name         string       `json:"name" firestore:"name"`
-	Code         string       `json:"code" firestore:"code" unique:"true"`
-	ContactEmail entity.Email `json:"contact_email" firestore:"contact_email"`
-	LogoURL      string       `json:"logo_url" firestore:"logo_url"`
-	RootUserID   string       `json:"root_user_id" firestore:"root_user_id"`
-	SubStart     time.Time    `json:"sub_start" firestore:"sub_start"`
-	SubEnd       time.Time    `json:"sub_end" firestore:"sub_end"`
-	CreatedAt    time.Time    `json:"created_at" firestore:"create_at"`
-	UpdatedAt    time.Time    `json:"updated_at" firestore:"update_at"`
+	ID           uint           `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name         string         `gorm:"not null;index" json:"name"`
+	Code         int64          `gorm:"uniqueIndex;not null" json:"code"`
+	ContactEmail string         `gorm:"index" json:"contact_email"`
+	LogoURL      string         `json:"logo_url"`
+	RootUserID   uint           `gorm:"index" json:"root_user_id"`
+	RootUser     *RootUser      `gorm:"foreignKey:RootUserID;references:ID" json:"-"`
+	Users        []User         `gorm:"foreignKey:OrgID;references:ID" json:"-"`
+	Vehicles     []Vehicle      `gorm:"foreignKey:OrgID;references:ID" json:"-"`
+	RFIDs        []RFID         `gorm:"foreignKey:OrgID;references:ID" json:"-"`
+	Scanners     []Scanner      `gorm:"foreignKey:OrgID;references:ID" json:"-"`
+	CreatedAt    time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt    time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
-func (o *Org) SetID(id string) {
-	o.ID = id
+func (Org) TableName() string {
+	return TableOrgs
 }

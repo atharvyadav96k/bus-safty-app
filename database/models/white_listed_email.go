@@ -1,14 +1,30 @@
 package database_models
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+const (
+	TableWhiteListedEmails = "white_listed_emails"
+
+	WhiteListedEmailColID        = "id"
+	WhiteListedEmailColEmail     = "email"
+	WhiteListedEmailColCreatedAt = "created_at"
+	WhiteListedEmailColUpdatedAt = "updated_at"
+	WhiteListedEmailColDeletedAt = "deleted_at"
+)
 
 type WhiteListedEmail struct {
-	ID        string    `json:"id"`
-	Email     string    `json:"email" unique="true"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        uint           `gorm:"primaryKey;autoIncrement" json:"id"`
+	Email     string         `gorm:"uniqueIndex;not null" json:"email"`
+	Users     []User         `gorm:"foreignKey:WhiteListedEmailID;references:ID" json:"-"`
+	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
-func (w *WhiteListedEmail) SetID(id string) {
-	w.ID = id
+func (WhiteListedEmail) TableName() string {
+	return TableWhiteListedEmails
 }

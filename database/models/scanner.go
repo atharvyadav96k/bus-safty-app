@@ -1,15 +1,33 @@
 package database_models
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+const (
+	TableScanners = "scanners"
+
+	ScannerColID        = "id"
+	ScannerColOrgID     = "org_id"
+	ScannerColDeviceKey = "device_key"
+	ScannerColCreatedAt = "created_at"
+	ScannerColUpdatedAt = "updated_at"
+	ScannerColDeletedAt = "deleted_at"
+)
 
 type Scanner struct {
-	ID        string    `json:"id"`
-	OrgID     string    `json:"org_id"`
-	DeviceKey string    `json:"device_key" unique="true"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        uint           `gorm:"primaryKey;autoIncrement" json:"id"`
+	OrgID     uint           `gorm:"index;not null" json:"org_id"`
+	Org       *Org           `gorm:"foreignKey:OrgID;references:ID" json:"-"`
+	DeviceKey string         `gorm:"uniqueIndex;not null" json:"device_key"`
+	Vehicles  []Vehicle      `gorm:"foreignKey:ScannerID;references:ID" json:"-"`
+	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
-func (s *Scanner) SetID(id string) {
-	s.ID = id
+func (Scanner) TableName() string {
+	return TableScanners
 }
