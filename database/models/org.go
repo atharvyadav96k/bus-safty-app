@@ -28,10 +28,6 @@ type Org struct {
 	LogoURL      string         `json:"logo_url"`
 	RootUserID   uint           `gorm:"index" json:"root_user_id"`
 	RootUser     *RootUser      `gorm:"foreignKey:RootUserID;references:ID" json:"-"`
-	Users        []User         `gorm:"foreignKey:OrgID;references:ID" json:"-"`
-	Vehicles     []Vehicle      `gorm:"foreignKey:OrgID;references:ID" json:"-"`
-	RFIDs        []RFID         `gorm:"foreignKey:OrgID;references:ID" json:"-"`
-	Scanners     []Scanner      `gorm:"foreignKey:OrgID;references:ID" json:"-"`
 	CreatedAt    time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt    time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`

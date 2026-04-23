@@ -22,7 +22,6 @@ type Scanner struct {
 	OrgID     uint           `gorm:"index;not null" json:"org_id"`
 	Org       *Org           `gorm:"foreignKey:OrgID;references:ID" json:"-"`
 	DeviceKey string         `gorm:"uniqueIndex;not null" json:"device_key"`
-	Vehicles  []Vehicle      `gorm:"foreignKey:ScannerID;references:ID" json:"-"`
 	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
