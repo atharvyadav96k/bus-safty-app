@@ -26,8 +26,6 @@ type Org struct {
 	Code         int64          `gorm:"uniqueIndex;not null" json:"code"`
 	ContactEmail string         `gorm:"index" json:"contact_email"`
 	LogoURL      string         `json:"logo_url"`
-	RootUserID   uint           `gorm:"index" json:"root_user_id"`
-	RootUser     *RootUser      `gorm:"foreignKey:RootUserID;references:ID" json:"-"`
 	CreatedAt    time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt    time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
