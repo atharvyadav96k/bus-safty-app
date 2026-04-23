@@ -19,7 +19,6 @@ const (
 type WhiteListedEmail struct {
 	ID        uint           `gorm:"primaryKey;autoIncrement" json:"id"`
 	Email     string         `gorm:"uniqueIndex;not null" json:"email"`
-	Users     []User         `gorm:"foreignKey:WhiteListedEmailID;references:ID" json:"-"`
 	CreatedAt time.Time      `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
